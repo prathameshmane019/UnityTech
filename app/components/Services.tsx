@@ -12,7 +12,7 @@ const services = [
 
 const Services = () => {
   return (
-    <section className="py-20 mx-auto bg-primary ">
+    <section className="py-20 mx-auto ">
       <div className="container  px-4">
         <h3 className="text-3xl font-bold text-center mb-12">Our Services</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
