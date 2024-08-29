@@ -11,7 +11,9 @@ import TextAnimation from './components/TextAnimation'
 import { TracingBeam } from './components/ui/Tracing-beam'
 
 export default function Home() {
+
   return (
+    
     <main className='bg-background text-text'>
       <TracingBeam className="px-6">
       <Header />
