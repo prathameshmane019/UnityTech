@@ -4,11 +4,11 @@ import { fetchWithErrorHandling } from './api'
 const API_URL = 'http://localhost:3000/api/subscriptions'
 
 export async function getSubscriptions(userId?: string): Promise<ISubscription[]> {
-  const url = userId ? `${API_URL}?userId=${userId}` : API_URL
+  const url = userId ? `${API_URL}/user/${userId}` : API_URL
   return fetchWithErrorHandling(url)
 }
 
-export async function createSubscription(subscriptionData: Omit<ISubscription, 'id'>): Promise<ISubscription> {
+export async function createSubscription(subscriptionData: Omit<ISubscription, '_id'>): Promise<ISubscription> {
   return fetchWithErrorHandling(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

@@ -13,6 +13,9 @@ const Sidebar = () => {
         <Link href="/admin/users" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">
           Users
         </Link>
+        <Link href="/admin/subscriptions" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">
+          Subscriptions
+        </Link>
       </nav>
     </div>
   )
