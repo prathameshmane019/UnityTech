@@ -12,7 +12,7 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          Unity Tech Solutions
+          UnityTech Solutions
         </motion.h1>
       <div className="w-[50rem] h-40 relative">
         {/* Gradients */}

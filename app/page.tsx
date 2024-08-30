@@ -6,9 +6,9 @@ import ProjectsShowcase from './components/ProjectShowcase'
 import Services from './components/Services'
 import About from './components/About'
 import Features from './components/Features'
-import Statistics from './components/Statistics'
 import TextAnimation from './components/TextAnimation'
 import { TracingBeam } from './components/ui/Tracing-beam'
+import Contact from './components/Contact'
 
 export default function Home() {
   return (
@@ -19,9 +19,11 @@ export default function Home() {
       <TextAnimation />
       <Features />
       <About />
+      
       <Services />
       <ProjectsShowcase />
-      <Statistics />
+      
+      <Contact/>
       <Footer />
       </TracingBeam>
     </main>

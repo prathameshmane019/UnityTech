@@ -8,42 +8,50 @@ import { StickyScroll } from './ui/sticky-scroll-reveal'
 
 const projects = [
   {
-    title: 'College Attendance Management System', content: (
-      <div className="h-full w-full  flex items-center justify-center text-white">
+    title: 'SwasthyaSamriddhi', 
+    content: (
+      <div className="h-full w-full flex items-center justify-center text-white">
         <Image
-          src="/attendance.svg"
-          width={300}
+          src="/swas.png"
+          width={800}
           height={300}
           className="h-full w-full object-cover"
-          alt="linear board demo"
+          alt="SwasthyaSamriddhi"
         />
       </div>
-    ), description: "Attendance System is designed to efficiently track and manage student attendance with ease. It automates the attendance process, making it more convenient for teachers and students.Key features include automated attendance tracking, detailed attendance reports, and easy integration with existing College management systems." },
+    ), 
+    description: "SwasthyaSamriddhi is a secure health management system designed to manage patient reports and doctor information efficiently. It provides a comprehensive platform for healthcare providers to securely store and access patient data, ensuring better care coordination and improved patient outcomes."
+  },
   {
-      title: 'College Feeback Management System', content: (
-        <div className="h-full w-full  flex items-center justify-center text-white">
-          <Image
-            src="/feedback.svg"
-            width={300}
-            height={300}
-            className="h-full w-full object-cover"
-            alt="linear board demo"
-          />
-        </div>
-      ), description: "At Student Assure, we believe in the power of student feedback to drive improvement in education. Our platform connects college students with educators, fostering a collaborative environment that enhances the learning experience for everyone involved.By providing a space for open communication and constructive feedback, we aim to create a more responsive and effective educational system that truly meets the needs of students and faculty alike."    },
-  {
-    title: 'Addmission Management System', content: (
-      <div className="h-full w-full  flex items-center justify-center text-white">
+    title: 'Attendance Pro', 
+    content: (
+      <div className="h-full w-full flex items-center justify-center text-white">
         <Image
-          src="/addmision.jpg"
-          width={300}
+          src="/attendance.png"
+          width={800}
           height={300}
           className="h-full w-full object-cover"
-          alt="linear board demo"
+          alt="Attendance Pro"
         />
-      </div>)
-      ,
-    description: "Efficiently process student applications, analyze data based on subjects, interests, and qualifications and automate the assignment of applicants to faculty members for admission related process."  },
+      </div>
+    ), 
+    description: "Attendance Pro is an advanced attendance management system designed to efficiently track and manage student attendance. It automates the attendance process, making it more convenient for teachers and students. Key features include automated attendance tracking, detailed reports, and easy integration with existing college management systems. An app version is also available for seamless access."
+  },
+  {
+    title: 'Student Assure', 
+    content: (
+      <div className="h-full w-full flex items-center justify-center text-white">
+        <Image
+          src="/studentassure.png"
+          width={800}
+          height={300}
+          className="h-full w-full object-cover"
+          alt="Student Assure"
+        />
+      </div>
+    ), 
+    description: "Student Assure is a feedback system where students can provide feedback on various aspects of their college experience. The platform connects students with educators, fostering a collaborative environment that enhances the learning experience by promoting open communication and constructive feedback."
+  },
 
 ]
 
