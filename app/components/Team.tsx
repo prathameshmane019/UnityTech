@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 
 const teamMembers = [
-  { name: 'Alice Johnson', role: 'CEO & Founder', image: '/team1.jpg' },
+  { name: 'Alice Johnson', role: 'CEO & Founder', image: '/profressional.jpg' },
   { name: 'Bob Smith', role: 'CTO', image: '/team2.jpg' },
   { name: 'Carol Williams', role: 'Lead Developer', image: '/team3.jpg' },
   { name: 'David Brown', role: 'UX Designer', image: '/team4.jpg' },
