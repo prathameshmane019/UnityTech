@@ -68,7 +68,7 @@ const Features = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="card p-6 bg-white shadow-lg rounded-lg"
+              className="card p-6 bg-gray-900 shadow-lg rounded-lg"
             >
               <feature.icon className="text-4xl text-primary mb-4" />
               <h4 className="text-xl font-semibold mb-2 text-primary">{feature.title}</h4>
