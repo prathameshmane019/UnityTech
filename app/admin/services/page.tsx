@@ -1,62 +1,59 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getServices, createService, updateService, deleteService } from '@/app/libs/api'
-import { IService } from '@/app/types/type'
+import { useState, useEffect } from 'react';
+import { getServices, createService, updateService, deleteService } from '@/app/libs/api';
+import { IService } from '@/app/types/type';
 
 export default function ServicesPage() {
-  const [services, setServices] = useState<IService[]>([])
-  const [currentService, setCurrentService] = useState<IService>({ _id: '', name: '', description: '' })
-  const [isEditing, setIsEditing] = useState(false)
+  const [services, setServices] = useState<IService[]>([]);
+  const [currentService, setCurrentService] = useState<IService>({ _id: '', name: '', description: '' });
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    fetchServices()
-  }, [])
+    fetchServices();
+  }, []);
 
   const fetchServices = async () => {
-    const data = await getServices()
-    setServices(data)
-  }
+    const data = await getServices();
+    setServices(data);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (isEditing) {
-      await updateService(currentService.id, currentService)
+      await updateService(currentService._id, currentService); // Corrected to use _id
     } else {
-      await createService(currentService)
+      await createService(currentService);
     }
-    setCurrentService({ _id: '', name: '', description: '' })
-    setIsEditing(false)
-    fetchServices()
-  }
+    setCurrentService({ _id: '', name: '', description: '' });
+    setIsEditing(false);
+    fetchServices();
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setCurrentService({ ...currentService, [name]: value })
-  }
+    const { name, value } = e.target;
+    setCurrentService({ ...currentService, [name]: value });
+  };
 
   const handleEditService = (service: IService) => {
-    setCurrentService(service)
-    setIsEditing(true)
-  }
+    setCurrentService(service);
+    setIsEditing(true);
+  };
 
   const handleDeleteService = async (id: string) => {
-    console.log(id);
-    console.log(services);
-    
-    await deleteService(id)
-    fetchServices()
-  }
+    await deleteService(id); // Ensure id is consistently _id
+    fetchServices();
+  };
 
   const handleCancelEdit = () => {
-    setCurrentService({ _id: '', name: '', description: '' })
-    setIsEditing(false)
-  }
+    setCurrentService({ _id: '', name: '', description: '' });
+    setIsEditing(false);
+  };
 
   return (
-    <div className='text-gray-900'>
+    <div className="text-gray-900">
       <h1 className="text-3xl font-semibold mb-6">Services</h1>
-      
+
       <form onSubmit={handleSubmit} className="mb-8">
         <input
           type="text"
@@ -106,7 +103,7 @@ export default function ServicesPage() {
                 Edit
               </button>
               <button
-                onClick={() => handleDeleteService(service?.id)}
+                onClick={() => handleDeleteService(service._id)} // Corrected to use _id
                 className="bg-red-500 text-white p-2 rounded"
               >
                 Delete
@@ -116,5 +113,5 @@ export default function ServicesPage() {
         ))}
       </ul>
     </div>
-  )
+  );
 }
