@@ -1,13 +1,13 @@
-"use client";
-
+"use client"
 import { motion } from 'framer-motion';
-import { FaCloud, FaRobot, FaShieldAlt, FaUserFriends,FaRegUser} from 'react-icons/fa';
-import { MdOutlineSupportAgent, MdArchitecture } from "react-icons/md";
-import { FcCollaboration } from "react-icons/fc";
-import { BiSolidCustomize } from "react-icons/bi";
-import { LuDatabaseBackup } from "react-icons/lu";
+import { FaUserFriends, FaRegUser } from 'react-icons/fa';
 import { FaMobileScreen } from "react-icons/fa6";
-import { GrPerformance } from "react-icons/gr";
+import { MdOutlineSupportAgent, MdArchitecture } from 'react-icons/md';
+import { FcCollaboration } from 'react-icons/fc';
+import { BiSolidCustomize } from 'react-icons/bi';
+import { LuDatabaseBackup } from 'react-icons/lu';
+import { GrPerformance } from 'react-icons/gr';
+
 const features = [
   {
     icon: FaUserFriends,
@@ -40,22 +40,7 @@ const features = [
     description: 'Peace of mind: Ensure the safety of your data with automatic backups and a reliable recovery system to prevent data loss.'
   },
   {
-    icon: FaCloud,
-    title: 'Cloud Integration',
-    description: 'Seamless cloud solutions: Integrate effortlessly with cloud platforms to enhance functionality and scalability.'
-  },
-  {
-    icon: FaRobot,
-    title: 'AI-Powered Analytics',
-    description: 'Data-driven insights: Utilize AI to analyze data and drive informed business decisions with advanced analytics.'
-  },
-  {
-    icon: FaShieldAlt,
-    title: 'Secure Infrastructure',
-    description: 'Robust security: Protect your infrastructure with top-notch security measures to ensure data safety and integrity.'
-  },
-  {
-    icon: FaMobileScreen ,
+    icon: FaMobileScreen,
     title: 'Mobile Accessibility',
     description: 'Seamless Mobile Experience: Access your software solutions anytime, anywhere with full mobile compatibility.'
   },
@@ -69,7 +54,6 @@ const features = [
     title: 'Optimized Search Performance',
     description: 'Fast and Reliable Search: Quickly find what you need with our high-performance search, designed to handle large amounts of data and heavy usage smoothly.'
   },
- 
 ];
 
 const Features = () => {
@@ -84,10 +68,10 @@ const Features = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="p-6 rounded-lg shadow-md bg-dark dark:bg-gray-800"
+              className="card p-6 bg-white shadow-lg rounded-lg"
             >
               <feature.icon className="text-4xl text-primary mb-4" />
-              <h4 className="text-xl font-semibold mb-2  text-primary">{feature.title}</h4>
+              <h4 className="text-xl font-semibold mb-2 text-primary">{feature.title}</h4>
               <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
             </motion.div>
           ))}
