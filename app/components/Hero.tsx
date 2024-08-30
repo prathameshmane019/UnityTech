@@ -37,7 +37,7 @@ const Hero = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          Unity Tech Solutions
+          UnityTech Solutions
         </motion.h1>
         <motion.p
           className="text-xl md:text-2xl mb-8"

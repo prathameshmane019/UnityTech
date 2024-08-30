@@ -7,10 +7,10 @@ const Header: React.FC = () => {
   return (
     <header className="bg-background shadow-md">
       <div className="container mx-auto px-4 py-6 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-text">Unity Tech Solutions</h1>
+        <h1 className="text-2xl font-bold text-text">UnityTech Solutions</h1>
         <nav>
           <ul className="flex space-x-6">
-            {['Home', 'Solutions', 'About Us', 'Contact'].map((item) => (
+            {['Home', 'About Us', 'Solutions', 'Contact'].map((item) => (
               <li key={item}>
                 <Link href="#" passHref>
                   <motion.span
