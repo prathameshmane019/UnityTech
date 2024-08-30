@@ -38,6 +38,22 @@ const projects = [
     description: "Attendance Pro is an advanced attendance management system designed to efficiently track and manage student attendance. It automates the attendance process, making it more convenient for teachers and students. Key features include automated attendance tracking, detailed reports, and easy integration with existing college management systems. An app version is also available for seamless access."
   },
   {
+    title: 'Admission Pro', 
+    content: (
+      <div className="h-full w-full flex items-center justify-center text-white">
+        <Image
+          src="/admission.png"
+          width={800}
+          height={300}
+          className="h-full w-full object-cover"
+          alt="Admission Pro"
+        />
+      </div>
+    ), 
+    description: "Admission Pro is designed specifically for engineering colleges to make the admission process more efficient. By reducing the reliance on Excel, it allows for a more collaborative and streamlined approach to managing admissions. Key features include automated application processing, real-time status tracking, and seamless integration with existing college management systems, ensuring a hassle-free admission experience."
+  },
+  
+  {
     title: 'Student Assure', 
     content: (
       <div className="h-full w-full flex items-center justify-center text-white">
