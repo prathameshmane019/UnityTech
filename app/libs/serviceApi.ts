@@ -1,7 +1,7 @@
 import { IService } from '@/app/types/type'
 import { fetchWithErrorHandling } from './api'
 
-const API_URL = 'http://localhost:3000/api/services'
+const API_URL = '/api/services'
 
 export async function getServices(): Promise<IService[]> {
   return fetchWithErrorHandling(API_URL)

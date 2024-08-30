@@ -1,7 +1,7 @@
 import { ISubscription } from '@/app/types/type'
 import { fetchWithErrorHandling } from './api'
 
-const API_URL = 'http://localhost:3000/api/subscriptions'
+const API_URL = '/api/subscriptions'
 
 export async function getSubscriptions(userId?: string): Promise<ISubscription[]> {
   const url = userId ? `${API_URL}/user/${userId}` : API_URL
