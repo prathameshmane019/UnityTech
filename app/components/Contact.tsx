@@ -7,16 +7,21 @@ const Contact = () => {
     <section className="py-20">
       <div className="container mx-auto px-4">
         <h3 className="text-3xl font-bold text-center mb-12">Get in Touch</h3>
-        <div className="flex justify-end ">
+        <div className="flex justify-between items-center">
+          {/* Image Section */}
+          <div className="w-full md:w-5/3 lg:w-1/3">
+            <img src="/contact.png" alt="Contact" className="w-full h-auto rounded-lg" />
+          </div>
           {/* Form Section */}
-          <div className="w-full md:w-1/2 lg:w-1/3 border p-10 border-gray-600 rounded-lg border-r-8 ">
+          <div className="w-full md:w-1/2 lg:w-1/3 border p-10 border-gray-600 rounded-lg border-r-8">
             <motion.form
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="max-w-lg mx-auto md:mx-0 "
+              className="max-w-lg mx-auto md:mx-0"
             >
               <div className="form-control mb-6">
+                <div className="mb-2 text-lg font-semibold">Name</div>
                 <input type="text" id="name" required className="input-line" />
                 <label htmlFor="name">
                   <span style={{ transitionDelay: "0ms" }}>N</span>
@@ -26,6 +31,7 @@ const Contact = () => {
                 </label>
               </div>
               <div className="form-control mb-6">
+                <div className="mb-2 text-lg font-semibold">Email</div>
                 <input type="email" id="email" required className="input-line" />
                 <label htmlFor="email">
                   <span style={{ transitionDelay: "0ms" }}>E</span>
@@ -36,6 +42,7 @@ const Contact = () => {
                 </label>
               </div>
               <div className="form-control mb-6">
+                <div className="mb-2 text-lg font-semibold">Message</div>
                 <textarea id="message" rows={4} required className="input-line"></textarea>
                 <label htmlFor="message">
                   <span style={{ transitionDelay: "0ms" }}>M</span>
