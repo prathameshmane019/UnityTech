@@ -111,7 +111,7 @@ import { IUser } from "../types/type"
 
 
 const formSchema = z.object({
-  _id: z.string().optional(),
+  _id: z.string(),
   name: z.string().min(2, {
     message: "Name must be at least 2 characters.",
   }),
@@ -141,10 +141,10 @@ export default function UserForm({ onSubmit, initialData }: UserFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
+      _id: "",
       name: "",
       email: "",
-      password: "",
-      type: "individual",
+      password: ""
     },
   })
 

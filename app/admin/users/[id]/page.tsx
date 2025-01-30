@@ -165,9 +165,6 @@ export default function UserPage({ params }: { params: { _id: string } }) {
           <p>
             <strong>Email:</strong> {user.email}
           </p>
-          <p>
-            <strong>Type:</strong> {user.type}
-          </p>
         </CardContent>
       </Card>
 

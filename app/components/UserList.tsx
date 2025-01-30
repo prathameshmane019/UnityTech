@@ -27,8 +27,7 @@ export default function UserList({ users }: UserListProps) {
                 className="text-blue-500 hover:underline"
               >
                 {user.name} - {user.email}
-              </Link>
-              <span className="ml-2 text-sm text-gray-900">{user.type}</span>
+              </Link> 
             </li>
           );
         })}
