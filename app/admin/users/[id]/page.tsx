@@ -152,7 +152,7 @@ export default function UserPage({ params }: { params: { _id: string } }) {
       <Button onClick={() => router.push("/admin/users")} className="mb-4">
         Back to Users
       </Button>
-      <h1 className="text-3xl font-bold mb-6">{user.name}'s Subscriptions</h1>
+      <h1 className="text-3xl font-bold mb-6">{user.name}&apos;s Subscriptions</h1>
 
       <Card className="mb-8">
         <CardHeader>

@@ -48,7 +48,7 @@ const Header: React.FC = () => {
             ))}
           </ul>
         </nav>
-        <Link href="/user">
+        <Link href="/signin">
         <motion.button
           className="bg-primary text-white px-4 py-2 rounded hover:bg-opacity-90 transition-colors"
           whileHover={{ scale: 1.05 }}
