@@ -1,3 +1,5 @@
+//components/subscriptionList
+
 import { ISubscription } from '@/app/types/type';
 
 interface SubscriptionListProps {

@@ -9,6 +9,8 @@ export async function getSubscriptions(userId?: string): Promise<ISubscription[]
 }
 
 export async function createSubscription(subscriptionData: Omit<ISubscription, '_id'>): Promise<ISubscription> {
+  console.log(subscriptionData);
+  
   return fetchWithErrorHandling(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -21,6 +23,7 @@ export async function getSubscriptionById(id: string): Promise<ISubscription> {
 }
 
 export async function updateSubscription(id: string, subscriptionData: Partial<ISubscription>): Promise<ISubscription> {
+  console.log(subscriptionData,id);
   return fetchWithErrorHandling(`${API_URL}/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

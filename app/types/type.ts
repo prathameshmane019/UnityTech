@@ -1,11 +1,23 @@
 export interface IUser {
+  _id: string
+  name: string
+  email: string
+  password: string 
+  instituteCode?: string
+  address?: string
+  university?: string
+  contact?: string
+}
 
+export interface IInstitute {
   _id: string;
   name: string;
+  instituteCode: string;
+  address: string;
+  university?: string;
+  contact: string;
   email: string;
-  password:string;
-  type: 'individual' | 'organization';
-  organizationName?: string;
+  password: string;
 }
 
 export interface IService {

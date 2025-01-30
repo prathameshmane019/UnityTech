@@ -55,7 +55,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <section className="py-12 bg-white min-h-screen">
+    <section className="py-12 bg-slate-200 min-h-screen">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold mb-8 text-gray-800">UnityTech ERP Modules</h2>
         <motion.div 
@@ -77,7 +77,7 @@ const Dashboard: React.FC = () => {
                   alt={module.name} 
                   layout="fill"
                   objectFit="contain"
-                  className="p-4"
+                  className="p-2"
                 />
               </div>
               <div className="p-6 flex-grow flex flex-col justify-between">
