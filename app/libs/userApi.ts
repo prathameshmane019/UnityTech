@@ -18,6 +18,8 @@ export async function createUser(userData: Omit<IUser, '_id'>): Promise<IUser> {
 }
 
 export async function getUserById(_id: string): Promise<IUser> {
+  console.log(_id);
+  
   return fetchWithErrorHandling(`${API}/${_id}`)
 }
 

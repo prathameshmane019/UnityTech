@@ -20,6 +20,19 @@ export interface IInstitute {
   password: string;
 }
 
+export interface DemoRequest {
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: 'pending' | 'approved' | 'rejected';
+  credentials?: {
+    username: string;
+    password: string;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
 export interface IService {
   _id: string;
   name: string;

@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import { getSubscriptions, createSubscription, updateSubscription, getUsers, getServices } from "@/app/libs/api"
 import type { ISubscription, IUser, IService } from "@/app/types/type"
@@ -54,6 +53,8 @@ export default function SubscriptionsPage() {
 
   const fetchSubscriptions = async () => {
     const data = await getSubscriptions()
+    console.log(data);
+    
     setSubscriptions(data)
   }
 
@@ -295,5 +296,4 @@ export default function SubscriptionsPage() {
       </Card>
     </div>
   )
-}
-
+} 

@@ -57,13 +57,17 @@ export default function UserPage({ params }: { params: { _id: string } }) {
   })
 
   useEffect(() => {
+    console.log(params);
+    
     fetchUserData()
     fetchServices()
-  }, []) // Removed params.id from dependencies
+  }, [params]) // Removed params.id from dependencies
 
   const fetchUserData = async () => {
     try {
       const userData = await getUserById(params._id)
+      console.log(userData);
+      
       setUser(userData)
       const userSubscriptions = await getSubscriptions(params._id)
       setSubscriptions(userSubscriptions)
@@ -79,6 +83,7 @@ export default function UserPage({ params }: { params: { _id: string } }) {
   const fetchServices = async () => {
     try {
       const servicesData = await getServices()
+      console.log(servicesData);
       setServices(servicesData)
     } catch (error) {
       toast({
