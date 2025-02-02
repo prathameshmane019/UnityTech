@@ -33,6 +33,10 @@ const subscriptionSchema = z.object({
   status: z.enum(["active", "inactive", "pending"]),
   domain: z.string(),
   access: z.boolean(),
+  cost: z.number().min(0, "Cost must be a positive number"),
+  discountPercentage: z.number().min(0).max(100, "Discount must be between 0 and 100"),
+  billingCycle: z.enum(["monthly", "quarterly", "annually"]),
+  autoRenew: z.boolean(),
 })
 
 export default function UserPage({ params }: { params: { _id: string } }) {
@@ -53,12 +57,16 @@ export default function UserPage({ params }: { params: { _id: string } }) {
       status: "pending",
       domain: "",
       access: false,
+      cost: 0,
+      discountPercentage: 0,
+      billingCycle: "monthly",
+      autoRenew: false,
     },
   })
 
   useEffect(() => {
     console.log(params);
-    
+
     fetchUserData()
     fetchServices()
   }, [params]) // Removed params.id from dependencies
@@ -67,7 +75,7 @@ export default function UserPage({ params }: { params: { _id: string } }) {
     try {
       const userData = await getUserById(params._id)
       console.log(userData);
-      
+
       setUser(userData)
       const userSubscriptions = await getSubscriptions(params._id)
       setSubscriptions(userSubscriptions)

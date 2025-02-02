@@ -47,4 +47,8 @@ export interface ISubscription {
   status: 'active' | 'inactive' | 'pending';
   domain: string;
   access: boolean;
+  cost: number
+  discountPercentage: number
+  billingCycle: "monthly" | "quarterly" | "annually"
+  autoRenew: boolean
 }
