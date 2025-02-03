@@ -12,7 +12,7 @@ import Contact from './components/Contact'
 
 export default function Home() {
   return (
-    <main className='bg-background text-text'>
+    <main className='bg-black text-text'>
       <Header />
       <TracingBeam className="px-6">
         <section id="home" className="pt-20">

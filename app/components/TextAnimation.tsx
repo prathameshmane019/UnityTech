@@ -7,7 +7,7 @@ const TextAnimation = () => {
   const text = "Innovate. Transform. Succeed.";
 
   return (
-    <div className="py-20 bg-background">
+    <div className="py-20 bg-black">
       <div className="container mx-auto text-center">
         <motion.h2
           className="text-4xl font-bold mb-8 text-text"
