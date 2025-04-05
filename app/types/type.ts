@@ -32,23 +32,32 @@ export interface DemoRequest {
   };
   createdAt: Date;
   updatedAt: Date;
-}
-export interface IService {
+}export interface IService {
   _id: string;
   name: string;
   description: string;
 }
-export interface ISubscription {
-  _id: string; // Make _id required
-  userId: string;
+
+export interface ISubscriptionService {
   serviceId: string;
+  baseCost: number;
+  discountPercentage: number;
+  finalCost: number;
+}
+
+
+export interface ISubscription {
+  _id: string;
+  userId: string;
+  services: ISubscriptionService[];
   startDate: Date;
   endDate: Date;
   status: 'active' | 'inactive' | 'pending';
   domain: string;
   access: boolean;
-  cost: number
-  discountPercentage: number
-  billingCycle: "monthly" | "quarterly" | "annually"
-  autoRenew: boolean
+  billingCycle: "monthly" | "quarterly" | "annually";
+  autoRenew: boolean;
+  totalBaseCost?: number;
+  totalDiscount?: number;
+  totalFinalCost?: number;
 }

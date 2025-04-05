@@ -306,7 +306,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { toast } from "@/hooks/use-toast"
-import { useForm } from "react-hook-form"
+import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form"
@@ -314,36 +314,38 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { CalendarIcon, CheckCircle2, XCircle, Clock, Banknote, RefreshCw } from "lucide-react"
+import { CalendarIcon, CheckCircle2, XCircle, Clock, Banknote, RefreshCw, Plus, Trash2, Calculator } from "lucide-react"
+
+// Updated schema to match the backend
+const serviceSchema = z.object({
+  serviceId: z.string().min(1, "Service is required"),
+  baseCost: z.number().min(0, "Cost must be a positive number"),
+  discountPercentage: z.number().min(0).max(100, "Discount must be between 0 and 100")
+})
 
 const subscriptionSchema = z.object({
   userId: z.string().min(1, "User is required"),
-  serviceId: z.string().min(1, "Service is required"),
+  services: z.array(serviceSchema).min(1, "At least one service is required"),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
   status: z.enum(["active", "inactive", "pending"]),
   domain: z.string().min(1, "Domain is required"),
   access: z.boolean(),
-  cost: z.number().min(0, "Cost must be a positive number"),
-  discountPercentage: z.number().min(0).max(100, "Discount must be between 0 and 100"),
   billingCycle: z.enum(["monthly", "quarterly", "annually"]),
   autoRenew: z.boolean()
 })
 
 const defaultValues = {
   userId: "",
-  serviceId: "",
+  services: [{ serviceId: "", baseCost: 0, discountPercentage: 0 }],
   startDate: "",
   endDate: "",
   status: "pending" as const,
   domain: "",
   access: false,
-  cost: 0,
-  discountPercentage: 0,
   billingCycle: "monthly" as const,
   autoRenew: false
 }
-
 
 export default function SubscriptionsPage() {
   const [subscriptions, setSubscriptions] = useState<ISubscription[]>([])
@@ -354,19 +356,13 @@ export default function SubscriptionsPage() {
 
   const form = useForm<z.infer<typeof subscriptionSchema>>({
     resolver: zodResolver(subscriptionSchema),
-    defaultValues: {
-      userId: "",
-      serviceId: "",
-      startDate: "",
-      endDate: "",
-      status: "pending",
-      domain: "",
-      access: false,
-      cost: 0,
-      discountPercentage: 0,
-      billingCycle: "monthly",
-      autoRenew: false
-    },
+    defaultValues
+  })
+
+  // Fix: Call useFieldArray directly instead of as a method of form
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "services"
   })
 
   const resetForm = useCallback(() => {
@@ -402,8 +398,10 @@ export default function SubscriptionsPage() {
     setServices(data)
   }
 
- 
-  
+  const calculateFinalCost = (baseCost: number, discountPercentage: number) => {
+    return baseCost - (baseCost * discountPercentage / 100)
+  }
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
@@ -433,10 +431,26 @@ export default function SubscriptionsPage() {
 
   const onSubmit = async (values: z.infer<typeof subscriptionSchema>) => {
     try {
+      // Calculate totalBaseCost, totalDiscount, totalFinalCost
+      const totalBaseCost = values.services.reduce((sum, service) => sum + service.baseCost, 0)
+      const totalDiscount = values.services.reduce((sum, service) => 
+        sum + (service.baseCost * service.discountPercentage / 100), 0)
+      const totalFinalCost = totalBaseCost - totalDiscount
+
+      // Update final cost for each service
+      const servicesWithFinalCost = values.services.map(service => ({
+        ...service,
+        finalCost: calculateFinalCost(service.baseCost, service.discountPercentage)
+      }))
+
       const subscriptionData = {
         ...values,
+        services: servicesWithFinalCost,
         startDate: new Date(values.startDate),
         endDate: new Date(values.endDate),
+        totalBaseCost,
+        totalDiscount,
+        totalFinalCost
       }
 
       if (editingSubscription) {
@@ -461,12 +475,49 @@ export default function SubscriptionsPage() {
 
   const handleEditSubscription = (subscription: ISubscription) => {
     setEditingSubscription(subscription)
+    
+    // Format the data to match the form structure
+    const formattedServices = subscription.services.map(service => ({
+      serviceId: service.serviceId,
+      baseCost: service.baseCost,
+      discountPercentage: service.discountPercentage
+    }))
+    
     form.reset({
-      ...subscription,
+      userId: subscription.userId,
+      services: formattedServices,
       startDate: new Date(subscription.startDate).toISOString().split("T")[0],
       endDate: new Date(subscription.endDate).toISOString().split("T")[0],
+      status: subscription.status,
+      domain: subscription.domain,
+      access: subscription.access,
+      billingCycle: subscription.billingCycle,
+      autoRenew: subscription.autoRenew
     })
+    
     setIsDialogOpen(true)
+  }
+
+  // Get total cost for a subscription including all services
+  const getTotalCost = (subscription: ISubscription) => {
+    return subscription.totalFinalCost || 
+      subscription.services?.reduce((sum, service) => sum + service.finalCost, 0) || 0
+  }
+
+  // Get services list for a subscription
+  const getServicesList = (subscription: ISubscription) => {
+    return subscription.services?.map(service => {
+      const serviceName = services.find(s => s._id === service.serviceId)?.name || service.serviceId
+      return (
+        <div key={service.serviceId} className="flex items-center gap-1 text-sm">
+          <span>{serviceName}</span>
+          <span className="text-gray-500">${service.finalCost}</span>
+          {service.discountPercentage > 0 && (
+            <span className="text-xs text-green-600">(-{service.discountPercentage}%)</span>
+          )}
+        </div>
+      )
+    })
   }
 
   return (
@@ -476,14 +527,14 @@ export default function SubscriptionsPage() {
           <h1 className="text-3xl font-bold">Subscriptions</h1>
           <p className="text-gray-500 mt-1">Manage your service subscriptions</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={handleModalChange} >
+        <Dialog open={isDialogOpen} onOpenChange={handleModalChange}>
           <DialogTrigger asChild>
-            <Button size="lg" className="gap-2" >
-              <span className="hidden sm:inline" >Add New Subscription</span>
+            <Button size="lg" className="gap-2">
+              <span className="hidden sm:inline">Add New Subscription</span>
               <span className="sm:hidden">Add New</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]"  >
+          <DialogContent className="sm:max-w-[700px]">
             <DialogHeader>
               <DialogTitle>{editingSubscription ? "Edit Subscription" : "Add New Subscription"}</DialogTitle>
             </DialogHeader>
@@ -514,30 +565,21 @@ export default function SubscriptionsPage() {
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
-                    name="serviceId"
+                    name="domain"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Service</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select service" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {services.map((service) => (
-                              <SelectItem key={service._id} value={service._id}>
-                                {service.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormLabel>Domain</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="startDate"
@@ -551,6 +593,7 @@ export default function SubscriptionsPage() {
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="endDate"
@@ -564,43 +607,7 @@ export default function SubscriptionsPage() {
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="cost"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cost</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="discountPercentage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Discount (%)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="status"
@@ -623,6 +630,7 @@ export default function SubscriptionsPage() {
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="billingCycle"
@@ -647,19 +655,113 @@ export default function SubscriptionsPage() {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="domain"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Domain</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium">Services</h3>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => append({ serviceId: "", baseCost: 0, discountPercentage: 0 })}
+                    >
+                      <Plus className="w-4 h-4 mr-2" /> Add Service
+                    </Button>
+                  </div>
+
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="p-4 border rounded-md">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="font-medium">Service {index + 1}</h4>
+                        {fields.length > 1 && (
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => remove(index)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormField
+                          control={form.control}
+                          name={`services.${index}.serviceId`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Service</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select service" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {services.map((service) => (
+                                    <SelectItem key={service._id} value={service._id}>
+                                      {service.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name={`services.${index}.baseCost`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Base Cost</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  {...field}
+                                  onChange={(e) => field.onChange(Number(e.target.value))}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name={`services.${index}.discountPercentage`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Discount (%)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  {...field}
+                                  onChange={(e) => field.onChange(Number(e.target.value))}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Final cost calculation */}
+                      {form.watch(`services.${index}.baseCost`) > 0 && (
+                        <div className="mt-2 text-sm flex items-center gap-1 text-gray-600">
+                          <Calculator className="w-4 h-4" />
+                          <span>Final Cost: $
+                            {calculateFinalCost(
+                              form.watch(`services.${index}.baseCost`), 
+                              form.watch(`services.${index}.discountPercentage`)
+                            ).toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
@@ -677,6 +779,7 @@ export default function SubscriptionsPage() {
                       </FormItem>
                     )}
                   />
+                  
                   <FormField
                     control={form.control}
                     name="autoRenew"
@@ -714,10 +817,10 @@ export default function SubscriptionsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
-                  <TableHead>Service</TableHead>
+                  <TableHead>Services</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Domain</TableHead>
-                  <TableHead>Cost</TableHead>
+                  <TableHead>Total Cost</TableHead>
                   <TableHead>Billing</TableHead>
                   <TableHead>Dates</TableHead>
                   <TableHead>Actions</TableHead>
@@ -730,7 +833,9 @@ export default function SubscriptionsPage() {
                       {users.find((u) => u._id === subscription.userId)?.name || subscription.userId}
                     </TableCell>
                     <TableCell>
-                      {services.find((s) => s._id === subscription.serviceId)?.name || subscription.serviceId}
+                      <div className="flex flex-col gap-1">
+                        {getServicesList(subscription)}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {getStatusBadge(subscription.status)}
@@ -744,11 +849,11 @@ export default function SubscriptionsPage() {
                       <div className="flex flex-col">
                         <div className="flex items-center gap-1">
                           <Banknote className="w-4 h-4 text-gray-500" />
-                          <span className="font-medium">${subscription.cost}</span>
+                          <span className="font-medium">${getTotalCost(subscription)}</span>
                         </div>
-                        {subscription.discountPercentage > 0 && (
+                        {(subscription.totalDiscount ?? 0) > 0 && (
                           <span className="text-sm text-green-600">
-                            -{subscription.discountPercentage}% off
+                            Saved: ${(subscription.totalDiscount ?? 0).toFixed(2)}
                           </span>
                         )}
                       </div>

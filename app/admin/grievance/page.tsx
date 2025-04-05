@@ -42,6 +42,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Send, Reply, FileText, Trash2, Search, Filter, Eye, AlertCircle } from 'lucide-react';
 import { GrievanceService, Grievance } from '@/app/libs/grievanceApi';
+import { Label } from '@/components/ui/label';
 
 // Validation Schema
 const replySchema = z.object({
@@ -354,26 +355,26 @@ const GrievanceList: React.FC = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <FormLabel>Name</FormLabel>
+                  < Label>Name</ Label>
                   <p className="mt-1">{selectedGrievance?.name}</p>
                 </div>
                 <div>
-                  <FormLabel>Email</FormLabel>
+                  < Label>Email</ Label>
                   <p className="mt-1">{selectedGrievance?.email}</p>
                 </div>
               </div>
               <div>
-                <FormLabel>Issue</FormLabel>
+                < Label>Issue</ Label>
                 <p className="mt-1">{selectedGrievance?.issue}</p>
               </div>
               {selectedGrievance?.suggestion && (
                 <div>
-                  <FormLabel>Suggestion</FormLabel>
+                  < Label>Suggestion</ Label>
                   <p className="mt-1">{selectedGrievance.suggestion}</p>
                 </div>
               )}
               <div>
-                <FormLabel>Status</FormLabel>
+                < Label>Status</ Label>
                 <Badge variant={selectedGrievance?.isRead ? "secondary" : "destructive"}>
                   {selectedGrievance?.isRead ? "Read" : "Unread"}
                 </Badge>
