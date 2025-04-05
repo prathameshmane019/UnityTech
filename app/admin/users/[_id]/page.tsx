@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 
-// Updated schema to match the backend
+// Updated schema to match backend
 const serviceSchema = z.object({
   serviceId: z.string().min(1, "Service is required"),
   baseCost: z.number().min(0, "Cost must be a positive number"),
@@ -42,6 +42,9 @@ const subscriptionSchema = z.object({
   access: z.boolean(),
   billingCycle: z.enum(["monthly", "quarterly", "annually"]),
   autoRenew: z.boolean(),
+  totalBaseCost: z.number().optional(),
+  totalDiscount: z.number().optional(),
+  totalFinalCost: z.number().optional(),
 })
 
 export default function UserPage({ params }: { params: { _id: string } }) {
@@ -64,6 +67,9 @@ export default function UserPage({ params }: { params: { _id: string } }) {
       access: false,
       billingCycle: "monthly",
       autoRenew: false,
+      totalBaseCost: 0,
+      totalDiscount: 0,
+      totalFinalCost: 0,
     },
   })
 
@@ -107,17 +113,15 @@ export default function UserPage({ params }: { params: { _id: string } }) {
 
   const onSubmit = async (values: z.infer<typeof subscriptionSchema>) => {
     try {
-      // Calculate finalCost for each service
-      const processedServices = values.services.map(service => ({
-        ...service,
-        finalCost: service.baseCost * (1 - service.discountPercentage / 100),
-      }))
-
       const subscriptionData = {
         ...values,
-        services: processedServices,
+        services: values.services.map(service => ({
+          ...service,
+          finalCost: service.baseCost * (1 - service.discountPercentage / 100),
+        })),
         startDate: new Date(values.startDate),
         endDate: new Date(values.endDate),
+        // Note: total costs will be calculated by backend middleware
       }
 
       if (editingSubscription) {
@@ -171,7 +175,7 @@ export default function UserPage({ params }: { params: { _id: string } }) {
       <Button onClick={() => router.push("/admin/users")} className="mb-4">
         Back to Users
       </Button>
-      <h1 className="text-3xl font-bold mb-6">{user.name}'s Subscriptions</h1>
+      <h1 className="text-3xl font-bold mb-6">{user.name}&apos;s Subscriptions</h1>
 
       <Card className="mb-8">
         <CardHeader>
@@ -187,77 +191,90 @@ export default function UserPage({ params }: { params: { _id: string } }) {
         <DialogTrigger asChild>
           <Button className="mb-4">Add New Subscription</Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[700px]">
+        <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
             <DialogTitle>{editingSubscription ? "Edit Subscription" : "Add New Subscription"}</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <FormField
-                    control={form.control}
-                    name={`services.${index}.serviceId`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Service</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">Services</h3>
+                {fields.map((field, index) => (
+                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <FormField
+                      control={form.control}
+                      name={`services.${index}.serviceId`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Service</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select service" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {services.map((service) => (
+                                <SelectItem key={service._id} value={service._id}>
+                                  {service.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`services.${index}.baseCost`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Base Cost</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select service" />
-                            </SelectTrigger>
+                            <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                           </FormControl>
-                          <SelectContent>
-                            {services.map((service) => (
-                              <SelectItem key={service._id} value={service._id}>
-                                {service.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`services.${index}.baseCost`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Base Cost</FormLabel>
-                        <FormControl>
-                          <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name={`services.${index}.discountPercentage`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Discount (%)</FormLabel>
-                        <FormControl>
-                          <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={() => remove(index)}
-                    disabled={fields.length === 1}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              ))}
-              <Button type="button" onClick={() => append({ serviceId: "", baseCost: 0, discountPercentage: 0 })}>
-                Add Service
-              </Button>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`services.${index}.discountPercentage`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Discount (%)</FormLabel>
+                          <FormControl>
+                            <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormItem>
+                      <FormLabel>Final Cost</FormLabel>
+                      <Input
+                        type="number"
+                        disabled
+                        value={(form.watch(`services.${index}.baseCost`) * 
+                          (1 - form.watch(`services.${index}.discountPercentage`) / 100)).toFixed(2)}
+                      />
+                    </FormItem>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => remove(index)}
+                      disabled={fields.length === 1}
+                      className="mt-8"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+                <Button type="button" onClick={() => append({ serviceId: "", baseCost: 0, discountPercentage: 0 })}>
+                  Add Service
+                </Button>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -345,6 +362,35 @@ export default function UserPage({ params }: { params: { _id: string } }) {
                 />
               </div>
 
+              <div className="grid grid-cols-3 gap-4">
+                <FormItem>
+                  <FormLabel>Total Base Cost</FormLabel>
+                  <Input
+                    type="number"
+                    disabled
+                    value={form.watch("services").reduce((sum, s) => sum + s.baseCost, 0).toFixed(2)}
+                  />
+                </FormItem>
+                <FormItem>
+                  <FormLabel>Total Discount</FormLabel>
+                  <Input
+                    type="number"
+                    disabled
+                    value={form.watch("services").reduce((sum, s) => 
+                      sum + (s.baseCost * s.discountPercentage / 100), 0).toFixed(2)}
+                  />
+                </FormItem>
+                <FormItem>
+                  <FormLabel>Total Final Cost</FormLabel>
+                  <Input
+                    type="number"
+                    disabled
+                    value={form.watch("services").reduce((sum, s) => 
+                      sum + (s.baseCost * (1 - s.discountPercentage / 100)), 0).toFixed(2)}
+                  />
+                </FormItem>
+              </div>
+
               <div className="flex gap-4">
                 <FormField
                   control={form.control}
@@ -393,7 +439,9 @@ export default function UserPage({ params }: { params: { _id: string } }) {
                 <TableHead>Domain</TableHead>
                 <TableHead>Billing Cycle</TableHead>
                 <TableHead>Access</TableHead>
-                <TableHead>Total Cost</TableHead>
+                <TableHead>Total Base Cost</TableHead>
+                <TableHead>Total Discount</TableHead>
+                <TableHead>Total Final Cost</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -404,7 +452,7 @@ export default function UserPage({ params }: { params: { _id: string } }) {
                     {subscription.services.map((service) => (
                       <div key={service.serviceId}>
                         {services.find((s) => s._id === service.serviceId)?.name || service.serviceId}
-                        {` ($${service.finalCost || (service.baseCost * (1 - service.discountPercentage / 100)).toFixed(2)})`}
+                        {` ($${service.baseCost.toFixed(2)} → $${service.finalCost.toFixed(2)})`}
                       </div>
                     ))}
                   </TableCell>
@@ -414,10 +462,9 @@ export default function UserPage({ params }: { params: { _id: string } }) {
                   <TableCell>{subscription.domain}</TableCell>
                   <TableCell>{subscription.billingCycle}</TableCell>
                   <TableCell>{subscription.access ? "Yes" : "No"}</TableCell>
-                  <TableCell>
-                    ${subscription.services.reduce((sum, s) => 
-                      sum + (s.finalCost || (s.baseCost * (1 - s.discountPercentage / 100))), 0).toFixed(2)}
-                  </TableCell>
+                  <TableCell>${(subscription.totalBaseCost ?? 0).toFixed(2)}</TableCell>
+                  <TableCell>${(subscription.totalDiscount ?? 0).toFixed(2)}</TableCell>
+                  <TableCell>${(subscription.totalFinalCost ?? 0).toFixed(2)}</TableCell>
                   <TableCell>
                     <Button variant="outline" className="mr-2" onClick={() => handleEditSubscription(subscription)}>
                       Edit
