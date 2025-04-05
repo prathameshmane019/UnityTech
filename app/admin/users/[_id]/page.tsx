@@ -10,13 +10,13 @@ import {
   deleteSubscription,
   getServices,
 } from "@/app/libs/api"
-import type { IUser, ISubscription, IService } from "@/app/types/type"
+import type { IUser, ISubscription, IService, ISubscriptionService } from "@/app/types/type"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { toast } from "@/hooks/use-toast"
-import { useForm } from "react-hook-form"
+import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -24,17 +24,22 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 
-const subscriptionSchema = z.object({
-  _id: z.string().optional(),
-  userId: z.string(),
-  serviceId: z.string(),
-  startDate: z.string(),
-  endDate: z.string(),
-  status: z.enum(["active", "inactive", "pending"]),
-  domain: z.string(),
-  access: z.boolean(),
-  cost: z.number().min(0, "Cost must be a positive number"),
+// Updated schema to match the backend
+const serviceSchema = z.object({
+  serviceId: z.string().min(1, "Service is required"),
+  baseCost: z.number().min(0, "Cost must be a positive number"),
   discountPercentage: z.number().min(0).max(100, "Discount must be between 0 and 100"),
+  finalCost: z.number().min(0).optional(),
+})
+
+const subscriptionSchema = z.object({
+  userId: z.string().min(1, "User is required"),
+  services: z.array(serviceSchema).min(1, "At least one service is required"),
+  startDate: z.string().min(1, "Start date is required"),
+  endDate: z.string().min(1, "End date is required"),
+  status: z.enum(["active", "inactive", "pending"]),
+  domain: z.string().min(1, "Domain is required"),
+  access: z.boolean(),
   billingCycle: z.enum(["monthly", "quarterly", "annually"]),
   autoRenew: z.boolean(),
 })
@@ -51,31 +56,30 @@ export default function UserPage({ params }: { params: { _id: string } }) {
     resolver: zodResolver(subscriptionSchema),
     defaultValues: {
       userId: params._id,
-      serviceId: "",
+      services: [{ serviceId: "", baseCost: 0, discountPercentage: 0 }],
       startDate: "",
       endDate: "",
       status: "pending",
       domain: "",
       access: false,
-      cost: 0,
-      discountPercentage: 0,
       billingCycle: "monthly",
       autoRenew: false,
     },
   })
 
-  useEffect(() => {
-    console.log(params);
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "services",
+  })
 
+  useEffect(() => {
     fetchUserData()
     fetchServices()
-  }, [params]) // Removed params.id from dependencies
+  }, [params._id])
 
   const fetchUserData = async () => {
     try {
       const userData = await getUserById(params._id)
-      console.log(userData);
-
       setUser(userData)
       const userSubscriptions = await getSubscriptions(params._id)
       setSubscriptions(userSubscriptions)
@@ -91,7 +95,6 @@ export default function UserPage({ params }: { params: { _id: string } }) {
   const fetchServices = async () => {
     try {
       const servicesData = await getServices()
-      console.log(servicesData);
       setServices(servicesData)
     } catch (error) {
       toast({
@@ -104,19 +107,24 @@ export default function UserPage({ params }: { params: { _id: string } }) {
 
   const onSubmit = async (values: z.infer<typeof subscriptionSchema>) => {
     try {
+      // Calculate finalCost for each service
+      const processedServices = values.services.map(service => ({
+        ...service,
+        finalCost: service.baseCost * (1 - service.discountPercentage / 100),
+      }))
+
+      const subscriptionData = {
+        ...values,
+        services: processedServices,
+        startDate: new Date(values.startDate),
+        endDate: new Date(values.endDate),
+      }
+
       if (editingSubscription) {
-        await updateSubscription(editingSubscription._id, {
-          ...values,
-          startDate: new Date(values.startDate),
-          endDate: new Date(values.endDate),
-        })
+        await updateSubscription(editingSubscription._id, subscriptionData)
         toast({ title: "Subscription updated successfully" })
       } else {
-        await createSubscription({
-          ...values,
-          startDate: new Date(values.startDate),
-          endDate: new Date(values.endDate),
-        })
+        await createSubscription(subscriptionData)
         toast({ title: "Subscription created successfully" })
       }
       setIsDialogOpen(false)
@@ -156,28 +164,22 @@ export default function UserPage({ params }: { params: { _id: string } }) {
     }
   }
 
-  if (!user) {
-    return <div>Loading...</div>
-  }
+  if (!user) return <div>Loading...</div>
 
   return (
     <div className="container mx-auto py-10">
       <Button onClick={() => router.push("/admin/users")} className="mb-4">
         Back to Users
       </Button>
-      <h1 className="text-3xl font-bold mb-6">{user.name}&apos;s Subscriptions</h1>
+      <h1 className="text-3xl font-bold mb-6">{user.name}'s Subscriptions</h1>
 
       <Card className="mb-8">
         <CardHeader>
           <CardTitle>User Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>
-            <strong>Name:</strong> {user.name}
-          </p>
-          <p>
-            <strong>Email:</strong> {user.email}
-          </p>
+          <p><strong>Name:</strong> {user.name}</p>
+          <p><strong>Email:</strong> {user.email}</p>
         </CardContent>
       </Card>
 
@@ -185,37 +187,79 @@ export default function UserPage({ params }: { params: { _id: string } }) {
         <DialogTrigger asChild>
           <Button className="mb-4">Add New Subscription</Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
             <DialogTitle>{editingSubscription ? "Edit Subscription" : "Add New Subscription"}</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="serviceId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Service</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+              {fields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <FormField
+                    control={form.control}
+                    name={`services.${index}.serviceId`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Service</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select service" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {services.map((service) => (
+                              <SelectItem key={service._id} value={service._id}>
+                                {service.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`services.${index}.baseCost`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Base Cost</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select service" />
-                          </SelectTrigger>
+                          <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
                         </FormControl>
-                        <SelectContent>
-                          {services.map((service) => (
-                            <SelectItem key={service._id} value={service._id}>
-                              {service.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`services.${index}.discountPercentage`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Discount (%)</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => remove(index)}
+                    disabled={fields.length === 1}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" onClick={() => append({ serviceId: "", baseCost: 0, discountPercentage: 0 })}>
+                Add Service
+              </Button>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="startDate"
@@ -277,21 +321,57 @@ export default function UserPage({ params }: { params: { _id: string } }) {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="billingCycle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Billing Cycle</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select billing cycle" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                          <SelectItem value="quarterly">Quarterly</SelectItem>
+                          <SelectItem value="annually">Annually</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-              <FormField
-                control={form.control}
-                name="access"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Access</FormLabel>
-                    </div>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+
+              <div className="flex gap-4">
+                <FormField
+                  control={form.control}
+                  name="access"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 flex-1">
+                      <FormLabel>Access</FormLabel>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="autoRenew"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 flex-1">
+                      <FormLabel>Auto Renew</FormLabel>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <Button type="submit">{editingSubscription ? "Update Subscription" : "Add Subscription"}</Button>
             </form>
           </Form>
@@ -306,12 +386,14 @@ export default function UserPage({ params }: { params: { _id: string } }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Service</TableHead>
+                <TableHead>Services</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Start Date</TableHead>
                 <TableHead>End Date</TableHead>
                 <TableHead>Domain</TableHead>
+                <TableHead>Billing Cycle</TableHead>
                 <TableHead>Access</TableHead>
+                <TableHead>Total Cost</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -319,13 +401,23 @@ export default function UserPage({ params }: { params: { _id: string } }) {
               {subscriptions.map((subscription) => (
                 <TableRow key={subscription._id}>
                   <TableCell>
-                    {services.find((s) => s._id === subscription.serviceId)?.name || subscription.serviceId}
+                    {subscription.services.map((service) => (
+                      <div key={service.serviceId}>
+                        {services.find((s) => s._id === service.serviceId)?.name || service.serviceId}
+                        {` ($${service.finalCost || (service.baseCost * (1 - service.discountPercentage / 100)).toFixed(2)})`}
+                      </div>
+                    ))}
                   </TableCell>
                   <TableCell>{subscription.status}</TableCell>
                   <TableCell>{new Date(subscription.startDate).toLocaleDateString()}</TableCell>
                   <TableCell>{new Date(subscription.endDate).toLocaleDateString()}</TableCell>
                   <TableCell>{subscription.domain}</TableCell>
+                  <TableCell>{subscription.billingCycle}</TableCell>
                   <TableCell>{subscription.access ? "Yes" : "No"}</TableCell>
+                  <TableCell>
+                    ${subscription.services.reduce((sum, s) => 
+                      sum + (s.finalCost || (s.baseCost * (1 - s.discountPercentage / 100))), 0).toFixed(2)}
+                  </TableCell>
                   <TableCell>
                     <Button variant="outline" className="mr-2" onClick={() => handleEditSubscription(subscription)}>
                       Edit
@@ -343,4 +435,3 @@ export default function UserPage({ params }: { params: { _id: string } }) {
     </div>
   )
 }
-
