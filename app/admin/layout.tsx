@@ -47,7 +47,7 @@ export default function AdminLayout({
       </div>
 
       {/* Main content */}
-      <main className="md:p-5 p-4 w-full h-screen transition-all duration-200 ease-in-out">{children}</main>
+      <main className="md:p-5 p-4 w-full max-h-screen transition-all overflow-y-auto duration-200 ease-in-out">{children}</main>
 
       {/* Overlay for mobile */}
       {isMobileMenuOpen && (
