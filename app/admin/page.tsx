@@ -49,12 +49,12 @@ export default function Dashboard() {
   const pieData = Object.entries(demoStatusData).map(([name, value]) => ({ name, value }));
 
   const stats = [
-    { title: 'Users', value: overview.users, icon: Users, path: '/users', color: 'text-blue-500' },
-    { title: 'Active Subscriptions', value: overview.activeSubscriptions, icon: DollarSign, path: '/subscriptions', color: 'text-green-500' },
-    { title: 'Total Revenue', value: `$${overview.totalRevenue?.toLocaleString() || 0}`, icon: DollarSign, path: '/finance', color: 'text-emerald-500' },
-    { title: 'Services', value: overview.services, icon: Server, path: '/services', color: 'text-purple-500' },
-    { title: 'Pending Demos', value: overview.pendingDemoRequests, icon: AlertCircle, path: '/demos', color: 'text-yellow-500' },
-    { title: 'Unread Grievances', value: overview.unreadGrievances, icon: AlertCircle, path: '/grievances', color: 'text-red-500' },
+    { title: 'Users', value: overview.users, icon: Users, path: '/admin/users', color: 'text-blue-500' },
+    { title: 'Active Subscriptions', value: overview.activeSubscriptions, icon: DollarSign, path: '/admin/subscriptions', color: 'text-green-500' },
+    { title: 'Total Revenue', value: `$${overview.totalRevenue?.toLocaleString() || 0}`, icon: DollarSign, path: '/admin/finance', color: 'text-emerald-500' },
+    { title: 'Services', value: overview.services, icon: Server, path: '/admin/services', color: 'text-purple-500' },
+    { title: 'Pending Demos', value: overview.pendingDemoRequests, icon: AlertCircle, path: '/admin/demos', color: 'text-yellow-500' },
+    { title: 'Unread Grievances', value: overview.unreadGrievances, icon: AlertCircle, path: '/admin/grievances', color: 'text-red-500' },
   ];
 
   return (
